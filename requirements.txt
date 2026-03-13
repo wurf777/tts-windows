@@ -1,0 +1,7 @@
+azure-cognitiveservices-speech>=1.37.0
+pystray>=0.19.5
+keyboard>=0.13.5
+Pillow>=10.3.0
+pyperclip>=1.8.2
+winsdk>=1.0.0b10
+numpy>=1.26.0
