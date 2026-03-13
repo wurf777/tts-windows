@@ -3,6 +3,13 @@
 import pystray
 from PIL import Image, ImageDraw
 
+import config
+
+
+def _fmt_hotkey(hk: str) -> str:
+    """Format 'ctrl+alt+s' → 'Ctrl+Alt+S'."""
+    return "+".join(part.capitalize() for part in hk.split("+"))
+
 _icon: pystray.Icon = None
 
 
@@ -44,11 +51,11 @@ def run(root, on_read_selected, on_screenshot_ocr, on_open_settings, on_exit):
 
     menu = pystray.Menu(
         pystray.MenuItem(
-            "Läs markerad text",
+            lambda item: f"Läs markerad text  ({_fmt_hotkey(config.HOTKEY_READ_SELECTED)})",
             lambda icon, item: root.after(0, on_read_selected),
         ),
         pystray.MenuItem(
-            "Screenshot OCR",
+            lambda item: f"Screenshot OCR  ({_fmt_hotkey(config.HOTKEY_SCREENSHOT_OCR)})",
             lambda icon, item: root.after(0, on_screenshot_ocr),
         ),
         pystray.MenuItem(

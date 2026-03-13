@@ -50,7 +50,9 @@ class ScreenshotOverlay:
         self._canvas.bind("<ButtonPress-1>", self._on_press)
         self._canvas.bind("<B1-Motion>", self._on_drag)
         self._canvas.bind("<ButtonRelease-1>", self._on_release)
+        self._canvas.bind("<Escape>", lambda _e: self._win.destroy())
         self._win.bind("<Escape>", lambda _e: self._win.destroy())
+        self._canvas.focus_set()
 
     # ------------------------------------------------------------------
     # Mouse event handlers (main thread)
