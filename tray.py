@@ -45,7 +45,7 @@ def _create_icon_image() -> Image.Image:
     return img
 
 
-def run(root, on_read_selected, on_screenshot_ocr, on_open_settings, on_exit):
+def run(root, on_read_selected, on_screenshot_ocr, on_open_text_input, on_open_settings, on_exit):
     """Blocking call — runs the pystray event loop. Call from a daemon thread."""
     global _icon
 
@@ -58,6 +58,11 @@ def run(root, on_read_selected, on_screenshot_ocr, on_open_settings, on_exit):
             lambda item: f"Screenshot OCR  ({_fmt_hotkey(config.HOTKEY_SCREENSHOT_OCR)})",
             lambda icon, item: root.after(0, on_screenshot_ocr),
         ),
+        pystray.MenuItem(
+            "Klistra in text…",
+            lambda icon, item: root.after(0, on_open_text_input),
+        ),
+        pystray.Menu.SEPARATOR,
         pystray.MenuItem(
             "Inställningar",
             lambda icon, item: root.after(0, on_open_settings),

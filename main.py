@@ -25,6 +25,7 @@ from tts_engine import TTSEngine
 from playback_window import PlaybackWindow
 from screenshot import ScreenshotOverlay
 from settings_window import SettingsWindow
+from text_input_window import TextInputWindow
 
 
 # Shared state (only accessed from main thread except where noted)
@@ -32,6 +33,7 @@ word_queue: queue.Queue = queue.Queue()
 tts_engine: TTSEngine = None
 playback_window: PlaybackWindow = None
 settings_window_ref: SettingsWindow = None
+text_input_window_ref: TextInputWindow = None
 root: tk.Tk = None
 
 
@@ -94,6 +96,27 @@ def on_ocr_text_ready(text: str):
 
     tts_engine = TTSEngine(word_queue)
     threading.Thread(target=tts_engine.speak, args=(text,), daemon=True).start()
+
+
+def on_open_text_input():
+    """Called on main thread — opens or focuses text input window."""
+    global text_input_window_ref
+    if text_input_window_ref is not None:
+        try:
+            text_input_window_ref.win.lift()
+            text_input_window_ref.win.focus_force()
+            return
+        except tk.TclError:
+            text_input_window_ref = None
+
+    def on_read_pasted_text(text: str):
+        global tts_engine, playback_window
+        if playback_window is not None:
+            return
+        tts_engine = TTSEngine(word_queue)
+        threading.Thread(target=tts_engine.speak, args=(text,), daemon=True).start()
+
+    text_input_window_ref = TextInputWindow(root, on_read_pasted_text)
 
 
 def on_open_settings():
@@ -182,7 +205,7 @@ def main():
     # Start tray icon in daemon thread
     threading.Thread(
         target=tray.run,
-        args=(root, on_read_selected, on_screenshot_ocr, on_open_settings, on_exit),
+        args=(root, on_read_selected, on_screenshot_ocr, on_open_text_input, on_open_settings, on_exit),
         daemon=True,
     ).start()
 

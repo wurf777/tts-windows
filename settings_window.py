@@ -5,10 +5,14 @@ Saves by rewriting config.py and calling importlib.reload(config).
 """
 
 import importlib
+import os
 import tkinter as tk
 from tkinter import ttk, messagebox
 
 import config
+
+# Absolute path to config.py so saves work regardless of CWD
+_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.py")
 
 # ------------------------------------------------------------------
 # Predefined voices per language
@@ -146,6 +150,7 @@ class SettingsWindow:
     # ------------------------------------------------------------------
 
     def _load_from_config(self):
+        importlib.reload(config)
         self._key_var.set(getattr(config, "AZURE_SPEECH_KEY", ""))
         self._region_var.set(getattr(config, "AZURE_SPEECH_REGION", "swedencentral"))
 
@@ -224,7 +229,7 @@ class SettingsWindow:
         )
 
         try:
-            with open("config.py", "w", encoding="utf-8") as fh:
+            with open(_CONFIG_PATH, "w", encoding="utf-8") as fh:
                 fh.write(content)
         except OSError as exc:
             messagebox.showerror(
