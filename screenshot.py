@@ -14,7 +14,7 @@ import tkinter as tk
 import keyboard
 from PIL import ImageGrab
 
-import config
+import config_loader
 
 
 class ScreenshotOverlay:
@@ -179,7 +179,7 @@ class ScreenshotOverlay:
         from winsdk.windows.storage.streams import InMemoryRandomAccessStream, DataWriter
 
         # Determine OCR language
-        lang_code = "sv" if getattr(config, "LANGUAGE", "sv") == "sv" else "en-US"
+        lang_code = "sv" if config_loader.load().LANGUAGE == "sv" else "en-US"
         lang = Language(lang_code)
 
         if not OcrEngine.is_language_supported(lang):

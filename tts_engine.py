@@ -9,11 +9,10 @@ calls happening off the main thread.
 
 import queue
 import threading
-import importlib
 
 import azure.cognitiveservices.speech as speechsdk
 
-import config
+import config_loader
 
 
 class TTSEngine:
@@ -28,14 +27,13 @@ class TTSEngine:
 
     def speak(self, text: str) -> None:
         """Synthesise text and emit word-boundary messages. Blocks until done."""
-        # Reload config in case settings changed since the engine was created
-        importlib.reload(config)
+        cfg = config_loader.load()
 
         speech_cfg = speechsdk.SpeechConfig(
-            subscription=config.AZURE_SPEECH_KEY,
-            region=config.AZURE_SPEECH_REGION,
+            subscription=cfg.AZURE_SPEECH_KEY,
+            region=cfg.AZURE_SPEECH_REGION,
         )
-        speech_cfg.speech_synthesis_voice_name = config.AZURE_VOICE_NAME
+        speech_cfg.speech_synthesis_voice_name = cfg.AZURE_VOICE_NAME
 
         audio_cfg = speechsdk.audio.AudioOutputConfig(use_default_speaker=True)
         synth = speechsdk.SpeechSynthesizer(
@@ -78,5 +76,10 @@ class TTSEngine:
     def stop(self) -> None:
         """Stop active synthesis. Thread-safe."""
         with self._lock:
-            if self._synthesizer is not None:
-                self._synthesizer.stop_speaking_async()
+            synth = self._synthesizer
+            self._synthesizer = None
+        if synth is not None:
+            try:
+                synth.stop_speaking_async().get()
+            except Exception:
+                pass

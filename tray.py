@@ -3,7 +3,7 @@
 import pystray
 from PIL import Image, ImageDraw
 
-import config
+import config_loader
 
 
 def _fmt_hotkey(hk: str) -> str:
@@ -51,11 +51,11 @@ def run(root, on_read_selected, on_screenshot_ocr, on_open_text_input, on_open_s
 
     menu = pystray.Menu(
         pystray.MenuItem(
-            lambda item: f"Läs markerad text  ({_fmt_hotkey(config.HOTKEY_READ_SELECTED)})",
+            lambda item: f"Läs markerad text  ({_fmt_hotkey(config_loader.load().HOTKEY_READ_SELECTED)})",
             lambda icon, item: root.after(0, on_read_selected),
         ),
         pystray.MenuItem(
-            lambda item: f"Screenshot OCR  ({_fmt_hotkey(config.HOTKEY_SCREENSHOT_OCR)})",
+            lambda item: f"Screenshot OCR  ({_fmt_hotkey(config_loader.load().HOTKEY_SCREENSHOT_OCR)})",
             lambda icon, item: root.after(0, on_screenshot_ocr),
         ),
         pystray.MenuItem(

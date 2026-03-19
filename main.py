@@ -13,12 +13,11 @@ import queue
 import threading
 import tkinter as tk
 import time
-import importlib
 
 import pyperclip
 import keyboard as kb
 
-import config
+import config_loader
 import tray
 import hotkeys
 from tts_engine import TTSEngine
@@ -49,7 +48,7 @@ def get_selected_text() -> str:
     for mod in ("ctrl", "alt", "shift"):
         kb.release(mod)
     kb.send("ctrl+c")
-    time.sleep(config.CLIPBOARD_DELAY_MS / 1000)
+    time.sleep(config_loader.load().CLIPBOARD_DELAY_MS / 1000)
 
     text = pyperclip.paste()
 
@@ -136,8 +135,7 @@ def on_open_settings():
 def on_settings_closed():
     global settings_window_ref
     settings_window_ref = None
-    # Reload config so new settings take effect for next TTS call
-    importlib.reload(config)
+    # Hotkeys may have changed — re-register with fresh config
     hotkeys.re_register(root, on_read_selected, on_screenshot_ocr)
 
 

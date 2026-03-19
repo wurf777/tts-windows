@@ -1,18 +1,13 @@
 """Settings window — lets the user edit config.py via a GUI.
 
 Must only be created from the main (tkinter) thread.
-Saves by rewriting config.py and calling importlib.reload(config).
+Saves by rewriting config.py next to the executable / script.
 """
 
-import importlib
-import os
 import tkinter as tk
 from tkinter import ttk, messagebox
 
-import config
-
-# Absolute path to config.py so saves work regardless of CWD
-_CONFIG_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "config.py")
+import config_loader
 
 # ------------------------------------------------------------------
 # Predefined voices per language
@@ -150,17 +145,17 @@ class SettingsWindow:
     # ------------------------------------------------------------------
 
     def _load_from_config(self):
-        importlib.reload(config)
-        self._key_var.set(getattr(config, "AZURE_SPEECH_KEY", ""))
-        self._region_var.set(getattr(config, "AZURE_SPEECH_REGION", "swedencentral"))
+        cfg = config_loader.load()
+        self._key_var.set(cfg.AZURE_SPEECH_KEY)
+        self._region_var.set(cfg.AZURE_SPEECH_REGION)
 
-        lang = getattr(config, "LANGUAGE", "sv")
+        lang = cfg.LANGUAGE
         if lang not in VOICES:
             lang = "sv"
         self._lang_var.set(lang)
         self._populate_voices(lang)
 
-        current_voice = getattr(config, "AZURE_VOICE_NAME", "")
+        current_voice = cfg.AZURE_VOICE_NAME
         # Try to select the current voice in the combo
         voice_ids = [v[0] for v in VOICES[lang]]
         if current_voice in voice_ids:
@@ -169,12 +164,8 @@ class SettingsWindow:
         else:
             self._voice_combo.current(0)
 
-        self._hotkey_read_var.set(
-            getattr(config, "HOTKEY_READ_SELECTED", "ctrl+alt+s")
-        )
-        self._hotkey_shot_var.set(
-            getattr(config, "HOTKEY_SCREENSHOT_OCR", "ctrl+alt+o")
-        )
+        self._hotkey_read_var.set(cfg.HOTKEY_READ_SELECTED)
+        self._hotkey_shot_var.set(cfg.HOTKEY_SCREENSHOT_OCR)
 
     def _populate_voices(self, lang: str):
         voices = VOICES.get(lang, VOICES["sv"])
@@ -211,6 +202,7 @@ class SettingsWindow:
         hotkey_read = self._hotkey_read_var.get().strip() or "ctrl+alt+s"
         hotkey_shot = self._hotkey_shot_var.get().strip() or "ctrl+alt+o"
 
+        cfg = config_loader.load()
         content = (
             f'# Azure Speech Service\n'
             f'AZURE_SPEECH_KEY = {key!r}\n'
@@ -225,11 +217,11 @@ class SettingsWindow:
             f'LANGUAGE = {lang!r}\n'
             f'\n'
             f'# Milliseconds to wait after Ctrl+C before reading clipboard\n'
-            f'CLIPBOARD_DELAY_MS = {getattr(config, "CLIPBOARD_DELAY_MS", 150)}\n'
+            f'CLIPBOARD_DELAY_MS = {cfg.CLIPBOARD_DELAY_MS}\n'
         )
 
         try:
-            with open(_CONFIG_PATH, "w", encoding="utf-8") as fh:
+            with open(config_loader.CONFIG_PATH, "w", encoding="utf-8") as fh:
                 fh.write(content)
         except OSError as exc:
             messagebox.showerror(

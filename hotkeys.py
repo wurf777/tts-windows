@@ -8,7 +8,7 @@ Windows for reliable global hotkey interception in all contexts.
 """
 
 import keyboard
-import config
+import config_loader
 
 _current_hotkeys: list[str] = []
 
@@ -30,15 +30,16 @@ def _apply(root, on_read_selected, on_screenshot_ocr):
             pass
     _current_hotkeys = []
 
+    cfg = config_loader.load()
     hk1 = keyboard.add_hotkey(
-        config.HOTKEY_READ_SELECTED,
+        cfg.HOTKEY_READ_SELECTED,
         lambda: root.after(0, on_read_selected),
     )
     hk2 = keyboard.add_hotkey(
-        config.HOTKEY_SCREENSHOT_OCR,
+        cfg.HOTKEY_SCREENSHOT_OCR,
         lambda: root.after(0, on_screenshot_ocr),
     )
-    _current_hotkeys = [config.HOTKEY_READ_SELECTED, config.HOTKEY_SCREENSHOT_OCR]
+    _current_hotkeys = [cfg.HOTKEY_READ_SELECTED, cfg.HOTKEY_SCREENSHOT_OCR]
 
 
 def re_register(root, on_read_selected, on_screenshot_ocr):
