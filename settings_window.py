@@ -4,9 +4,11 @@ Must only be created from the main (tkinter) thread.
 Saves by rewriting config.py next to the executable / script.
 """
 
+import threading
 import tkinter as tk
 from tkinter import ttk, messagebox
 
+import keyboard
 import config_loader
 
 # ------------------------------------------------------------------
@@ -44,7 +46,7 @@ class SettingsWindow:
 
         # Centre on screen
         self.win.update_idletasks()
-        w, h = 460, 320
+        w, h = 500, 340
         sw = root.winfo_screenwidth()
         sh = root.winfo_screenheight()
         self.win.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
@@ -115,18 +117,28 @@ class SettingsWindow:
             row=4, column=0, sticky="w", **pad
         )
         self._hotkey_read_var = tk.StringVar()
-        tk.Entry(frame, textvariable=self._hotkey_read_var, width=34).grid(
+        tk.Entry(frame, textvariable=self._hotkey_read_var, width=24).grid(
             row=4, column=1, sticky="ew", **pad
         )
+        self._btn_listen_read = tk.Button(
+            frame, text="Lyssna", width=7,
+            command=lambda: self._start_listening(self._hotkey_read_var, self._btn_listen_read),
+        )
+        self._btn_listen_read.grid(row=4, column=2, **pad)
 
         # Snabbtangent – screenshot
         tk.Label(
             frame, text="Snabbtangent – Screenshot:", anchor="w", width=lbl_w
         ).grid(row=5, column=0, sticky="w", **pad)
         self._hotkey_shot_var = tk.StringVar()
-        tk.Entry(frame, textvariable=self._hotkey_shot_var, width=34).grid(
+        tk.Entry(frame, textvariable=self._hotkey_shot_var, width=24).grid(
             row=5, column=1, sticky="ew", **pad
         )
+        self._btn_listen_shot = tk.Button(
+            frame, text="Lyssna", width=7,
+            command=lambda: self._start_listening(self._hotkey_shot_var, self._btn_listen_shot),
+        )
+        self._btn_listen_shot.grid(row=5, column=2, **pad)
 
         frame.columnconfigure(1, weight=1)
 
@@ -177,6 +189,26 @@ class SettingsWindow:
     def _on_language_changed(self):
         lang = self._lang_var.get()
         self._populate_voices(lang)
+
+    # ------------------------------------------------------------------
+    # Hotkey listener
+    # ------------------------------------------------------------------
+
+    def _start_listening(self, var: tk.StringVar, btn: tk.Button):
+        """Start listening for a hotkey combination in a background thread."""
+        btn.config(text="Tryck...", state=tk.DISABLED)
+
+        def _listen():
+            hotkey = keyboard.read_hotkey(suppress=False)
+            self._root.after(0, lambda: self._finish_listening(var, btn, hotkey))
+
+        t = threading.Thread(target=_listen, daemon=True)
+        t.start()
+
+    def _finish_listening(self, var: tk.StringVar, btn: tk.Button, hotkey: str):
+        """Called on main thread when a hotkey has been captured."""
+        var.set(hotkey)
+        btn.config(text="Lyssna", state=tk.NORMAL)
 
     # ------------------------------------------------------------------
     # Save / cancel

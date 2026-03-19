@@ -194,13 +194,61 @@ def on_exit():
     root.quit()
 
 
+def _create_splash(root: tk.Tk) -> tuple[tk.Toplevel, tk.Label]:
+    """Create a small splash window showing startup status."""
+    from tkinter import font as tkfont
+
+    win = tk.Toplevel(root)
+    win.overrideredirect(True)
+    win.attributes("-topmost", True)
+
+    frame = tk.Frame(win, bg="#2b2b2b", padx=20, pady=14, highlightbackground="#555",
+                     highlightthickness=1)
+    frame.pack(fill=tk.BOTH, expand=True)
+
+    title_font = tkfont.Font(family="Segoe UI", size=12, weight="bold")
+    tk.Label(frame, text="TTS Windows", font=title_font, fg="#FFD700",
+             bg="#2b2b2b").pack(anchor="w")
+
+    status_font = tkfont.Font(family="Segoe UI", size=10)
+    status_lbl = tk.Label(frame, text="Startar...", font=status_font, fg="#cccccc",
+                          bg="#2b2b2b", anchor="w")
+    status_lbl.pack(anchor="w", pady=(4, 0))
+
+    win.update_idletasks()
+    w, h = win.winfo_reqwidth(), win.winfo_reqheight()
+    sw = root.winfo_screenwidth()
+    sh = root.winfo_screenheight()
+    win.geometry(f"+{(sw - w) // 2}+{(sh - h) // 2}")
+
+    # Force the window to actually render on screen
+    win.update()
+
+    return win, status_lbl
+
+
 def main():
     global root
 
     root = tk.Tk()
     root.withdraw()  # hide the root window — we only use it as a message pump
 
+    # Show splash
+    splash_win, splash_status = _create_splash(root)
+
+    def splash_update(text: str):
+        splash_status.config(text=text)
+        splash_win.update()
+
+    import time as _time
+    _splash_start = _time.time()
+
+    # Load config
+    splash_update("Laddar konfiguration...")
+    cfg = config_loader.load()
+
     # Start tray icon in daemon thread
+    splash_update("Startar systemfältsikon...")
     threading.Thread(
         target=tray.run,
         args=(root, on_read_selected, on_screenshot_ocr, on_open_text_input, on_open_settings, on_exit),
@@ -208,6 +256,7 @@ def main():
     ).start()
 
     # Start hotkey listener in daemon thread
+    splash_update("Registrerar snabbtangenter...")
     threading.Thread(
         target=hotkeys.register,
         args=(root, on_read_selected, on_screenshot_ocr),
@@ -216,6 +265,12 @@ def main():
 
     # Start word-queue poll loop
     root.after(50, poll_word_queue)
+
+    # Ensure splash is visible for at least 2 seconds total
+    splash_update("Redo!")
+    _elapsed_ms = int((_time.time() - _splash_start) * 1000)
+    _remaining = max(2000 - _elapsed_ms, 400)
+    root.after(_remaining, splash_win.destroy)
 
     root.mainloop()
 
