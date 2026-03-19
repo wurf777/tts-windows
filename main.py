@@ -219,7 +219,9 @@ def _create_splash(root: tk.Tk) -> tuple[tk.Toplevel, tk.Label]:
     w, h = win.winfo_reqwidth(), win.winfo_reqheight()
     sw = root.winfo_screenwidth()
     sh = root.winfo_screenheight()
-    win.geometry(f"+{(sw - w) // 2}+{(sh - h) // 2}")
+    x = sw - w - 40
+    y = sh - h - 80
+    win.geometry(f"+{x}+{y}")
 
     # Force the window to actually render on screen
     win.update()
