@@ -7,9 +7,10 @@ En Windows-app som läser upp text med Azure Speech SDK. Kör i bakgrunden som e
 - **Systemtray-ikon** — appen kör alltid i bakgrunden med en högerklicksmeny
 - **Läs markerad text** — markera text var som helst och tryck på snabbtangenten
 - **Screenshot OCR** — rita en ruta på skärmen, texten känns igen och läses upp
+- **Textinmatningsfönster** — klistra in eller skriv text manuellt och läs upp
 - **Uppspelningsfönster** — visar texten och highlightar aktuellt ord i realtid
 - **Avbryt-knapp** — stoppar uppläsningen omedelbart
-- **Inställningsfönster** — byt röst och snabbtangenter direkt i appen
+- **Inställningsfönster** — byt röst, snabbtangenter och språk direkt i appen
 
 ## Krav
 
@@ -31,7 +32,11 @@ pip install -r requirements.txt
 Kopiera sedan konfigurationsfilen och fyll i dina uppgifter:
 
 ```bash
+# Git Bash / macOS / Linux:
 cp config.example.py config.py
+
+# Windows cmd:
+copy config.example.py config.py
 ```
 
 Redigera `config.py`:
@@ -84,7 +89,9 @@ hotkeys.py           — globala snabbtangenter (keyboard, daemon-tråd)
 tts_engine.py        — Azure Speech TTS, word boundary-events
 playback_window.py   — uppspelningsfönster med ord-highlighting
 screenshot.py        — skärmdumpsöverlägg + Windows OCR (winrt)
-settings_window.py   — inställningsfönster för röst och tangenter
+settings_window.py   — inställningsfönster för röst, tangenter och språk
+text_input_window.py — manuellt textinmatningsfönster
+config_loader.py     — läser config.py dynamiskt från disk (stöd för exe och skript)
 config.py            — lokal konfiguration (ignoreras av git)
 config.example.py    — mall för config.py
 ```
