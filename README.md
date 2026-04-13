@@ -21,7 +21,7 @@ En Windows-app som läser upp text med Azure Speech SDK. Kör i bakgrunden som e
 ## Installation
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/wurf777/tts-windows.git
 cd tts-windows
 python -m venv .venv
 .venv\Scripts\activate
