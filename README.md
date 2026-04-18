@@ -11,7 +11,6 @@ En Windows-app som läser upp text med Azure Speech SDK. Kör i bakgrunden som e
 - **Screenshot OCR** — rita en ruta på skärmen, texten känns igen och läses upp
 - **Textinmatningsfönster** — klistra in eller skriv text manuellt och läs upp
 - **Uppspelningsfönster** — visar texten och highlightar aktuellt ord i realtid
-- **Avbryt-knapp** — stoppar uppläsningen omedelbart
 - **Inställningsfönster** — byt röst, snabbtangenter och språk direkt i appen
 
 | Uppspelningsfönster | Inställningar |
