@@ -2,6 +2,8 @@
 
 En Windows-app som läser upp text med Azure Speech SDK. Kör i bakgrunden som en systemtray-ikon och aktiveras via snabbtangenter eller högerklicksmenyn.
 
+
+
 ## Funktioner
 
 - **Systemtray-ikon** — appen kör alltid i bakgrunden med en högerklicksmeny
@@ -12,12 +14,23 @@ En Windows-app som läser upp text med Azure Speech SDK. Kör i bakgrunden som e
 - **Avbryt-knapp** — stoppar uppläsningen omedelbart
 - **Inställningsfönster** — byt röst, snabbtangenter och språk direkt i appen
 
+| Uppspelningsfönster | Inställningar |
+|---|---|
+| ![Huvudfönster](assets/screenshot-main.png) | ![Inställningar](assets/screenshot-settings.png) |
+
+## Ladda ner
+
+Hämta senaste **TTS Windows.exe** från [Releases](https://github.com/wurf777/tts-windows/releases).
+
+Lägg `config.py` bredvid exe-filen (kopiera från `config.example.py`) och fyll i din Azure-nyckel — eller använd inställningsfönstret i appen.
+
 ## Krav
 
 - Windows 10/11
-- Python 3.10+
 - Azure Speech Service-nyckel
-- Administratörsrättigheter (krävs av `keyboard`-biblioteket för globala snabbtangenter)
+- Administratörsrättigheter (krävs för globala snabbtangenter)
+
+*För att köra från källkod krävs även Python 3.10+ — se Installation nedan.*
 
 ## Installation
 
