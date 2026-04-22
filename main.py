@@ -21,6 +21,7 @@ import config_loader
 import tray
 import hotkeys
 import abbreviations
+import markdown_utils
 from tts_engine import TTSEngine
 from playback_window import PlaybackWindow
 from screenshot import ScreenshotOverlay
@@ -40,6 +41,26 @@ root: tk.Tk = None
 
 def _preprocess(text: str) -> str:
     return abbreviations.expand(text)
+
+
+def _on_read_text(text: str):
+    """Internal helper to start TTS on a string with markdown support."""
+    global tts_engine, playback_window
+    if not text or playback_window is not None:
+        return
+
+    text = _preprocess(text)
+    cfg = config_loader.load()
+    
+    # Parse markdown to get display text, SSML for audio, and formatting tags
+    display_text, ssml_text, tags = markdown_utils.process_markdown(text, cfg.AZURE_VOICE_NAME)
+    
+    tts_engine = TTSEngine(word_queue)
+    threading.Thread(
+        target=tts_engine.speak, 
+        args=(display_text, ssml_text, tags), 
+        daemon=True
+    ).start()
 
 
 def get_selected_text() -> str:
@@ -68,20 +89,10 @@ def get_selected_text() -> str:
 
 def on_read_selected():
     """Called on main thread when user triggers 'Läs markerad text'."""
-    global tts_engine, playback_window
     print("[DEBUG] on_read_selected triggered")
-    if playback_window is not None:
-        print("[DEBUG] playback_window is not None, skipping")
-        return  # already reading
-
     text = get_selected_text()
     print(f"[DEBUG] got text: {repr(text[:80]) if text else '(empty)'}")
-    if not text:
-        return
-
-    text = _preprocess(text)
-    tts_engine = TTSEngine(word_queue)
-    threading.Thread(target=tts_engine.speak, args=(text,), daemon=True).start()
+    _on_read_text(text)
 
 
 def on_screenshot_ocr():
@@ -94,15 +105,7 @@ def on_screenshot_ocr():
 
 def on_ocr_text_ready(text: str):
     """Called on main thread after OCR completes."""
-    global tts_engine, playback_window
-    if not text:
-        return
-    if playback_window is not None:
-        return
-
-    text = _preprocess(text)
-    tts_engine = TTSEngine(word_queue)
-    threading.Thread(target=tts_engine.speak, args=(text,), daemon=True).start()
+    _on_read_text(text)
 
 
 def on_open_text_input():
@@ -116,15 +119,7 @@ def on_open_text_input():
         except tk.TclError:
             text_input_window_ref = None
 
-    def on_read_pasted_text(text: str):
-        global tts_engine, playback_window
-        if playback_window is not None:
-            return
-        text = _preprocess(text)
-        tts_engine = TTSEngine(word_queue)
-        threading.Thread(target=tts_engine.speak, args=(text,), daemon=True).start()
-
-    text_input_window_ref = TextInputWindow(root, on_read_pasted_text)
+    text_input_window_ref = TextInputWindow(root, _on_read_text)
 
 
 def on_open_settings():
@@ -195,7 +190,12 @@ def poll_word_queue():
 
         if msg_type == "start":
             if playback_window is None:
-                playback_window = PlaybackWindow(root, msg["text"], on_cancel)
+                playback_window = PlaybackWindow(
+                    root, 
+                    msg["text"], 
+                    on_cancel, 
+                    tags=msg.get("tags")
+                )
 
         elif msg_type == "word":
             if playback_window is not None:
