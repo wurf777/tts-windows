@@ -6,13 +6,14 @@ abbreviations.json is stored next to config.py (handled by config_loader.APP_DIR
 import json
 import os
 import re
+from typing import Dict, Optional
 
 import config_loader
 
 ABBREVS_PATH = os.path.join(config_loader.APP_DIR, "abbreviations.json")
 
 
-def load() -> dict[str, str]:
+def load() -> Dict[str, str]:
     """Load abbreviations from disk. Returns {} if file is missing or invalid."""
     try:
         with open(ABBREVS_PATH, "r", encoding="utf-8") as f:
@@ -26,13 +27,13 @@ def load() -> dict[str, str]:
     return {}
 
 
-def save(abbrevs: dict[str, str]) -> None:
+def save(abbrevs: Dict[str, str]) -> None:
     """Write abbreviations to disk."""
     with open(ABBREVS_PATH, "w", encoding="utf-8") as f:
         json.dump(abbrevs, f, ensure_ascii=False, indent=2)
 
 
-def _build_pattern(abbrevs: dict[str, str]) -> re.Pattern | None:
+def _build_pattern(abbrevs: Dict[str, str]) -> Optional[re.Pattern]:
     if not abbrevs:
         return None
     # Longest-first so "t.ex." doesn't get shadowed by "t"
@@ -42,7 +43,7 @@ def _build_pattern(abbrevs: dict[str, str]) -> re.Pattern | None:
     return re.compile(r"(?<!\w)(?:" + alternation + r")(?!\w)", re.IGNORECASE)
 
 
-def _make_replacer(abbrevs: dict[str, str]):
+def _make_replacer(abbrevs: Dict[str, str]):
     lower_map = {k.lower(): v for k, v in abbrevs.items()}
 
     def replacer(match: re.Match) -> str:
@@ -51,7 +52,7 @@ def _make_replacer(abbrevs: dict[str, str]):
     return replacer
 
 
-def expand(text: str, abbrevs: dict[str, str] | None = None) -> str:
+def expand(text: str, abbrevs: Optional[Dict[str, str]] = None) -> str:
     """Return text with all abbreviations expanded. Loads from disk if abbrevs is None."""
     if abbrevs is None:
         abbrevs = load()

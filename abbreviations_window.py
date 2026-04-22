@@ -6,6 +6,7 @@ Must only be created from the main (tkinter) thread.
 
 import tkinter as tk
 from tkinter import ttk, messagebox
+from typing import Optional
 
 import abbreviations
 
@@ -83,7 +84,7 @@ class AbbreviationsWindow:
         for abbr in sorted(abbrevs.keys(), key=str.lower):
             self._tree.insert("", tk.END, values=(abbr, abbrevs[abbr]))
 
-    def _selected_abbr(self) -> str | None:
+    def _selected_abbr(self) -> Optional[str]:
         sel = self._tree.selection()
         if not sel:
             return None
