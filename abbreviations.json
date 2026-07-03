@@ -1,6 +1,8 @@
 {
-  "tts": "Text to Windows",
-  "VGN": "Västra Götalands Närradioförening",
-  "PeO": "Per-Olof",
-  "obs": "observera"
+  "sv": {
+    "tts": "Text to Windows",
+    "VGN": "Västra Götalands Närradioförening",
+    "PeO": "Per-Olof",
+    "obs": "observera"
+  }
 }

@@ -44,25 +44,19 @@ class SettingsWindow:
         self.win.attributes("-topmost", True)
         self.win.protocol("WM_DELETE_WINDOW", self._on_cancel)
 
-        # Centre on screen
-        self.win.update_idletasks()
-        w, h = 500, 340
-        sw = root.winfo_screenwidth()
-        sh = root.winfo_screenheight()
-        self.win.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
-
         self._build_ui()
         self._load_from_config()
+        self._position_window()
 
     # ------------------------------------------------------------------
     # UI construction
     # ------------------------------------------------------------------
 
     def _build_ui(self):
-        pad = {"padx": 14, "pady": 4}
-        lbl_w = 22  # label column width in characters
+        pad = {"padx": 12, "pady": 5}
+        lbl_w = 24  # label column width in characters
 
-        frame = tk.Frame(self.win, padx=10, pady=10)
+        frame = tk.Frame(self.win, padx=14, pady=14)
         frame.pack(fill=tk.BOTH, expand=True)
 
         # API-nyckel
@@ -108,7 +102,7 @@ class SettingsWindow:
             frame,
             textvariable=self._voice_var,
             state="readonly",
-            width=32,
+            width=36,
         )
         self._voice_combo.grid(row=3, column=1, sticky="ew", **pad)
 
@@ -144,13 +138,23 @@ class SettingsWindow:
 
         # Button bar
         btn_bar = tk.Frame(self.win)
-        btn_bar.pack(fill=tk.X, padx=14, pady=(4, 12))
+        btn_bar.pack(fill=tk.X, padx=26, pady=(10, 18))
         tk.Button(btn_bar, text="Avbryt", width=10, command=self._on_cancel).pack(
             side=tk.RIGHT, padx=(6, 0)
         )
         tk.Button(
             btn_bar, text="Spara", width=10, command=self._on_save, default=tk.ACTIVE
         ).pack(side=tk.RIGHT)
+
+    def _position_window(self):
+        """Size to content and centre on screen."""
+        self.win.update_idletasks()
+
+        w = max(600, self.win.winfo_reqwidth())
+        h = max(360, self.win.winfo_reqheight())
+        sw = self._root.winfo_screenwidth()
+        sh = self._root.winfo_screenheight()
+        self.win.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
 
     # ------------------------------------------------------------------
     # Data binding

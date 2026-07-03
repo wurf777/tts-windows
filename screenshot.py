@@ -12,9 +12,52 @@ import threading
 import tkinter as tk
 
 import keyboard
-from PIL import ImageGrab
+from PIL import ImageFilter, ImageGrab, ImageOps
 
 import config_loader
+
+
+def configure_dpi_awareness() -> None:
+    """Make Tkinter and screenshots use real screen pixels on Windows."""
+    if not hasattr(ctypes, "windll"):
+        return
+
+    user32 = ctypes.windll.user32
+    shcore = getattr(ctypes.windll, "shcore", None)
+
+    # Must be called before Tk creates any windows. Per-monitor v2 gives the
+    # cleanest mapping between Tk root coordinates and ImageGrab pixels.
+    try:
+        user32.SetProcessDpiAwarenessContext(ctypes.c_void_p(-4))
+        return
+    except Exception:
+        pass
+
+    if shcore is not None:
+        try:
+            shcore.SetProcessDpiAwareness(2)  # PROCESS_PER_MONITOR_DPI_AWARE
+            return
+        except Exception:
+            pass
+
+    try:
+        user32.SetProcessDPIAware()
+    except Exception:
+        pass
+
+
+def _virtual_screen_bbox() -> tuple[int, int, int, int]:
+    """Return the full desktop bounds in physical pixels."""
+    user32 = ctypes.windll.user32
+    left = user32.GetSystemMetrics(76)  # SM_XVIRTUALSCREEN
+    top = user32.GetSystemMetrics(77)  # SM_YVIRTUALSCREEN
+    width = user32.GetSystemMetrics(78)  # SM_CXVIRTUALSCREEN
+    height = user32.GetSystemMetrics(79)  # SM_CYVIRTUALSCREEN
+    return left, top, left + width, top + height
+
+
+def _tk_geometry_offset(value: int) -> str:
+    return f"+{value}" if value >= 0 else str(value)
 
 
 class ScreenshotOverlay:
@@ -35,8 +78,13 @@ class ScreenshotOverlay:
 
     def start(self) -> None:
         """Open the full-screen selection overlay. Call from main thread."""
+        left, top, right, bottom = _virtual_screen_bbox()
+
         self._win = tk.Toplevel(self._root)
-        self._win.attributes("-fullscreen", True)
+        self._win.geometry(
+            f"{right - left}x{bottom - top}"
+            f"{_tk_geometry_offset(left)}{_tk_geometry_offset(top)}"
+        )
         self._win.attributes("-topmost", True)
         self._win.attributes("-alpha", 0.25)
         self._win.configure(bg="black")
@@ -125,30 +173,10 @@ class ScreenshotOverlay:
     def _capture(self, x1: int, y1: int, x2: int, y2: int) -> None:
         """Grab the screen region and start OCR in a worker thread."""
         try:
-            # Tkinter reports logical coords (96-DPI basis) for DPI-unaware processes.
-            # Both GetDpiForSystem and GetDpiForMonitor(MDT_EFFECTIVE_DPI) are
-            # virtualized to 96 for such processes. Fix: temporarily set the thread
-            # to system-DPI-aware so GDI calls (incl. inside Pillow) use physical
-            # pixel coordinates and GetDpiForSystem returns the real DPI.
-            DPI_AWARENESS_CONTEXT_SYSTEM_AWARE = ctypes.c_void_p(-2)
-            try:
-                old_ctx = ctypes.windll.user32.SetThreadDpiAwarenessContext(
-                    DPI_AWARENESS_CONTEXT_SYSTEM_AWARE
-                )
-            except Exception:
-                old_ctx = None
-            try:
-                try:
-                    scale = ctypes.windll.user32.GetDpiForSystem() / 96.0
-                except Exception:
-                    scale = 1.0
-                bbox = (int(x1 * scale), int(y1 * scale), int(x2 * scale), int(y2 * scale))
-                print(f"[Screenshot] logical=({x1},{y1},{x2},{y2}) scale={scale:.3f} physical={bbox}")
-                img = ImageGrab.grab(bbox=bbox, all_screens=True)
-                print(f"[Screenshot] captured image size: {img.size}")
-            finally:
-                if old_ctx is not None:
-                    ctypes.windll.user32.SetThreadDpiAwarenessContext(old_ctx)
+            bbox = (int(x1), int(y1), int(x2), int(y2))
+            print(f"[Screenshot] capture bbox={bbox}")
+            img = ImageGrab.grab(bbox=bbox, all_screens=True)
+            print(f"[Screenshot] captured image size: {img.size}")
         except Exception as exc:
             print(f"[Screenshot] Capture failed: {exc}")
             return
@@ -193,7 +221,7 @@ class ScreenshotOverlay:
             return ""
 
         # Encode PIL image as PNG into an in-memory WinRT stream
-        pil_image = pil_image.convert("RGBA")
+        pil_image = self._prepare_for_ocr(pil_image)
         buf = io.BytesIO()
         pil_image.save(buf, format="PNG")
         png_bytes = buf.getvalue()
@@ -210,3 +238,23 @@ class ScreenshotOverlay:
 
         result = await engine.recognize_async(bitmap)
         return result.text
+
+    @staticmethod
+    def _prepare_for_ocr(pil_image):
+        """Improve contrast and text size before Windows OCR sees the crop."""
+        image = pil_image.convert("L")
+        image = ImageOps.autocontrast(image)
+        image = image.filter(ImageFilter.SHARPEN)
+
+        width, height = image.size
+        longest_side = max(width, height)
+        scale = 1
+        if longest_side < 900:
+            scale = 3
+        elif longest_side < 1400:
+            scale = 2
+
+        if scale > 1:
+            image = image.resize((width * scale, height * scale))
+
+        return image.convert("RGBA")

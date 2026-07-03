@@ -24,7 +24,7 @@ import abbreviations
 import markdown_utils
 from tts_engine import TTSEngine
 from playback_window import PlaybackWindow
-from screenshot import ScreenshotOverlay
+from screenshot import ScreenshotOverlay, configure_dpi_awareness
 from settings_window import SettingsWindow
 from text_input_window import TextInputWindow
 
@@ -261,6 +261,7 @@ def _create_splash(root: tk.Tk) -> tuple[tk.Toplevel, tk.Label]:
 def main():
     global root
 
+    configure_dpi_awareness()
     root = tk.Tk()
     root.withdraw()  # hide the root window — we only use it as a message pump
 

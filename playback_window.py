@@ -21,14 +21,6 @@ class PlaybackWindow:
         self.win.bind("<Escape>", lambda _: self._cancel())
         self.win.after(100, self.win.focus_force)
 
-        # Position near bottom-right of screen
-        screen_w = root.winfo_screenwidth()
-        screen_h = root.winfo_screenheight()
-        win_w, win_h = 520, 240
-        x = screen_w - win_w - 40
-        y = screen_h - win_h - 80
-        self.win.geometry(f"{win_w}x{win_h}+{x}+{y}")
-
         # Text widget
         self._base_font = tkfont.Font(family="Segoe UI", size=12)
         self._bold_font = tkfont.Font(family="Segoe UI", size=12, weight="bold")
@@ -67,6 +59,7 @@ class PlaybackWindow:
         cancel_btn.pack(side=tk.RIGHT, ipadx=8, ipady=2)
 
         self._set_text(text, tags)
+        self._position_window()
 
     # ------------------------------------------------------------------
     # Public methods — call only from main thread
@@ -111,6 +104,20 @@ class PlaybackWindow:
                 tw.tag_add(tag_name, start_pos, end_pos)
                 
         tw.configure(state=tk.DISABLED)
+
+    def _position_window(self) -> None:
+        """Size to requested content and position near the bottom-right."""
+        self.win.update_idletasks()
+
+        win_w = max(520, self.win.winfo_reqwidth())
+        win_h = max(280, self.win.winfo_reqheight())
+        screen_w = self._root.winfo_screenwidth()
+        screen_h = self._root.winfo_screenheight()
+        x = max(0, screen_w - win_w - 40)
+        y = max(0, screen_h - win_h - 80)
+
+        self.win.minsize(win_w, win_h)
+        self.win.geometry(f"{win_w}x{win_h}+{x}+{y}")
 
     def _cancel(self) -> None:
         self._on_cancel()
