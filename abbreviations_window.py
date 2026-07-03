@@ -9,15 +9,17 @@ from tkinter import ttk, messagebox
 from typing import Optional
 
 import abbreviations
+import config_loader
+from settings_window import LANGUAGE_LABELS
 
 
 class AbbreviationsWindow:
     def __init__(self, root: tk.Tk, on_closed):
         self._root = root
         self._on_closed = on_closed
+        self._edit_lang = config_loader.load().LANGUAGE
 
         self.win = tk.Toplevel(root)
-        self.win.title("Förkortningar")
         self.win.resizable(True, True)
         self.win.attributes("-topmost", True)
         self.win.protocol("WM_DELETE_WINDOW", self._on_close)
@@ -30,6 +32,7 @@ class AbbreviationsWindow:
         self.win.minsize(400, 280)
 
         self._build_ui()
+        self._update_title()
         self._load_list()
 
     # ------------------------------------------------------------------
@@ -50,6 +53,20 @@ class AbbreviationsWindow:
         tk.Button(toolbar, text="Ta bort", width=10, command=self._on_delete).pack(
             side=tk.LEFT
         )
+
+        # Language selector (right side of toolbar)
+        lang_frame = tk.Frame(toolbar)
+        lang_frame.pack(side=tk.RIGHT)
+        tk.Label(lang_frame, text="Språk:").pack(side=tk.LEFT, padx=(0, 4))
+        self._lang_var = tk.StringVar(value=self._edit_lang)
+        for code, label in LANGUAGE_LABELS.items():
+            tk.Radiobutton(
+                lang_frame,
+                text=label,
+                variable=self._lang_var,
+                value=code,
+                command=self._on_lang_change,
+            ).pack(side=tk.LEFT, padx=(0, 4))
 
         # List area
         list_frame = tk.Frame(self.win, padx=10)
@@ -74,13 +91,17 @@ class AbbreviationsWindow:
         btn_bar.pack(side=tk.BOTTOM, fill=tk.X)
         tk.Button(btn_bar, text="Stäng", width=10, command=self._on_close).pack(side=tk.RIGHT)
 
+    def _update_title(self):
+        label = LANGUAGE_LABELS.get(self._edit_lang, self._edit_lang)
+        self.win.title(f"Förkortningar – {label}")
+
     # ------------------------------------------------------------------
     # Data
     # ------------------------------------------------------------------
 
     def _load_list(self):
         self._tree.delete(*self._tree.get_children())
-        abbrevs = abbreviations.load()
+        abbrevs = abbreviations.load(lang=self._edit_lang)
         for abbr in sorted(abbrevs.keys(), key=str.lower):
             self._tree.insert("", tk.END, values=(abbr, abbrevs[abbr]))
 
@@ -94,6 +115,11 @@ class AbbreviationsWindow:
     # Actions
     # ------------------------------------------------------------------
 
+    def _on_lang_change(self):
+        self._edit_lang = self._lang_var.get()
+        self._update_title()
+        self._load_list()
+
     def _on_add(self):
         self._open_edit_dialog()
 
@@ -102,7 +128,7 @@ class AbbreviationsWindow:
         if abbr is None:
             messagebox.showinfo("Ingen vald", "Välj en förkortning att redigera.", parent=self.win)
             return
-        abbrevs = abbreviations.load()
+        abbrevs = abbreviations.load(lang=self._edit_lang)
         self._open_edit_dialog(abbr=abbr, expansion=abbrevs.get(abbr, ""))
 
     def _on_delete(self):
@@ -116,9 +142,9 @@ class AbbreviationsWindow:
             parent=self.win,
         ):
             return
-        abbrevs = abbreviations.load()
+        abbrevs = abbreviations.load(lang=self._edit_lang)
         abbrevs.pop(abbr, None)
-        abbreviations.save(abbrevs)
+        abbreviations.save(abbrevs, lang=self._edit_lang)
         self._load_list()
 
     def _open_edit_dialog(self, abbr: str = "", expansion: str = ""):
@@ -159,6 +185,8 @@ class AbbreviationsWindow:
 
         frame.columnconfigure(1, weight=1)
 
+        edit_lang = self._edit_lang
+
         def _save():
             new_abbr = abbr_var.get().strip()
             new_exp = exp_var.get().strip()
@@ -167,7 +195,7 @@ class AbbreviationsWindow:
                     "Saknade fält", "Både förkortning och expansion måste fyllas i.", parent=dialog
                 )
                 return
-            abbrevs = abbreviations.load()
+            abbrevs = abbreviations.load(lang=edit_lang)
             if is_new and new_abbr in abbrevs:
                 if not messagebox.askyesno(
                     "Ersätt?",
@@ -178,7 +206,7 @@ class AbbreviationsWindow:
             if not is_new and abbr != new_abbr:
                 abbrevs.pop(abbr, None)
             abbrevs[new_abbr] = new_exp
-            abbreviations.save(abbrevs)
+            abbreviations.save(abbrevs, lang=edit_lang)
             dialog.destroy()
             self._load_list()
 
