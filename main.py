@@ -48,11 +48,11 @@ def _preprocess(text: str) -> str:
     return abbreviations.expand(text)
 
 
-def _on_read_text(text: str):
+def _on_read_text(text: str) -> bool:
     """Internal helper to start TTS on a string with markdown support."""
     global tts_engine, playback_window
     if not text or tts_engine is not None or playback_window is not None:
-        return
+        return False
 
     text = _preprocess(text)
     cfg = config_loader.load()
@@ -66,6 +66,7 @@ def _on_read_text(text: str):
         args=(display_text, ssml_text, tags), 
         daemon=True
     ).start()
+    return True
 
 
 def get_selected_text() -> str:
@@ -172,7 +173,7 @@ def on_settings_closed():
     global settings_window_ref
     settings_window_ref = None
     # Hotkeys may have changed — re-register with fresh config
-    hotkeys.re_register(root, on_read_selected, on_screenshot_ocr)
+    hotkeys.re_register(root, on_read_selected, on_screenshot_ocr, on_open_text_input)
 
 
 def on_cancel():
@@ -355,7 +356,7 @@ def main():
     splash_update("Registrerar snabbtangenter...")
     threading.Thread(
         target=hotkeys.register,
-        args=(root, on_read_selected, on_screenshot_ocr),
+        args=(root, on_read_selected, on_screenshot_ocr, on_open_text_input),
         daemon=True,
     ).start()
 

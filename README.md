@@ -9,7 +9,7 @@ En Windows-app som läser upp text med Azure Speech SDK. Kör i bakgrunden som e
 - **Systemtray-ikon** — appen kör alltid i bakgrunden med en högerklicksmeny
 - **Läs markerad text** — markera text var som helst och tryck på snabbtangenten
 - **Screenshot OCR** — rita en ruta på skärmen, texten känns igen och läses upp
-- **Textinmatningsfönster** — klistra in eller skriv text manuellt och läs upp
+- **Textinmatningsfönster** — öppna med snabbtangent, klistra in eller skriv text manuellt och läs upp
 - **Uppspelningsfönster** — visar texten och highlightar aktuellt ord i realtid
 - **Markdown-stöd** — fetstil, kursiv, listor och citat renderas i uppspelningsfönstret
 - **Förkortningsexpansion** — anpassningsbara förkortningar expanderas automatiskt vid uppläsning
@@ -77,6 +77,7 @@ Appen hamnar i systemtray-fältet. Högerklicka på ikonen för menyn.
 |---|---|
 | `Ctrl+Alt+S` | Läs markerad text |
 | `Ctrl+Alt+O` | Screenshot OCR |
+| `Ctrl+Alt+V` | Öppna textinmatning |
 
 Snabbtangenterna kan ändras i `config.py` eller via inställningsfönstret i tray-menyn.
 
@@ -91,6 +92,7 @@ Alla inställningar finns i `config.py` (checkas inte in i git):
 | `AZURE_VOICE_NAME` | Röst (Neural TTS) | `sv-SE-MattiasNeural` |
 | `HOTKEY_READ_SELECTED` | Snabbtangent för text | `ctrl+alt+s` |
 | `HOTKEY_SCREENSHOT_OCR` | Snabbtangent för OCR | `ctrl+alt+o` |
+| `HOTKEY_OPEN_TEXT_INPUT` | Snabbtangent för textinmatningsfönster | `ctrl+alt+v` |
 | `LANGUAGE` | Språk för OCR | `sv` |
 | `CLIPBOARD_DELAY_MS` | Fördröjning efter Ctrl+C | `150` |
 

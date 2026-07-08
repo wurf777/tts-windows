@@ -25,6 +25,7 @@ _DEFAULTS = {
     "AZURE_VOICE_NAME": "sv-SE-MattiasNeural",
     "HOTKEY_READ_SELECTED": "ctrl+alt+s",
     "HOTKEY_SCREENSHOT_OCR": "ctrl+alt+o",
+    "HOTKEY_OPEN_TEXT_INPUT": "ctrl+alt+v",
     "LANGUAGE": "sv",
     "CLIPBOARD_DELAY_MS": 150,
     "AZURE_COST_URL": "https://portal.azure.com/#view/Microsoft_Azure_CostManagement/Menu/~/costanalysis",

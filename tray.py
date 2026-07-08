@@ -59,7 +59,7 @@ def run(root, on_read_selected, on_screenshot_ocr, on_open_text_input, on_open_s
             lambda icon, item: root.after(0, on_screenshot_ocr),
         ),
         pystray.MenuItem(
-            "Klistra in text…",
+            lambda item: f"Öppna textinmatning  ({_fmt_hotkey(config_loader.load().HOTKEY_OPEN_TEXT_INPUT)})",
             lambda icon, item: root.after(0, on_open_text_input),
         ),
         pystray.MenuItem(

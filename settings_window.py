@@ -135,14 +135,28 @@ class SettingsWindow:
         )
         self._btn_listen_shot.grid(row=5, column=2, **pad)
 
+        tk.Label(
+            frame, text="Snabbtangent - Textinmatning:", anchor="w", width=lbl_w
+        ).grid(row=6, column=0, sticky="w", **pad)
+        self._hotkey_text_input_var = tk.StringVar()
+        tk.Entry(frame, textvariable=self._hotkey_text_input_var, width=24).grid(
+            row=6, column=1, sticky="ew", **pad
+        )
+        self._btn_listen_text_input = tk.Button(
+            frame, text="Lyssna", width=7,
+            command=lambda: self._start_listening(
+                self._hotkey_text_input_var, self._btn_listen_text_input
+            ),
+        )
+        self._btn_listen_text_input.grid(row=6, column=2, **pad)
 
         # Azure cost/budget link
         tk.Label(frame, text="Azure kostnadslänk:", anchor="w", width=lbl_w).grid(
-            row=6, column=0, sticky="w", **pad
+            row=7, column=0, sticky="w", **pad
         )
         self._cost_url_var = tk.StringVar()
         tk.Entry(frame, textvariable=self._cost_url_var, width=34).grid(
-            row=6, column=1, columnspan=2, sticky="ew", **pad
+            row=7, column=1, columnspan=2, sticky="ew", **pad
         )
 
         frame.columnconfigure(1, weight=1)
@@ -194,6 +208,7 @@ class SettingsWindow:
 
         self._hotkey_read_var.set(cfg.HOTKEY_READ_SELECTED)
         self._hotkey_shot_var.set(cfg.HOTKEY_SCREENSHOT_OCR)
+        self._hotkey_text_input_var.set(cfg.HOTKEY_OPEN_TEXT_INPUT)
         self._cost_url_var.set(cfg.AZURE_COST_URL)
 
     def _populate_voices(self, lang: str):
@@ -266,6 +281,7 @@ class SettingsWindow:
 
         hotkey_read = self._hotkey_read_var.get().strip() or "ctrl+alt+s"
         hotkey_shot = self._hotkey_shot_var.get().strip() or "ctrl+alt+o"
+        hotkey_text_input = self._hotkey_text_input_var.get().strip() or "ctrl+alt+v"
         cost_url = self._cost_url_var.get().strip()
 
         cfg = config_loader.load()
@@ -278,6 +294,7 @@ class SettingsWindow:
             f'# Hotkeys (keyboard library format)\n'
             f'HOTKEY_READ_SELECTED = {hotkey_read!r}\n'
             f'HOTKEY_SCREENSHOT_OCR = {hotkey_shot!r}\n'
+            f'HOTKEY_OPEN_TEXT_INPUT = {hotkey_text_input!r}\n'
             f'\n'
             f'# Language: "sv" for Swedish, "en" for English\n'
             f'LANGUAGE = {lang!r}\n'

@@ -6,6 +6,7 @@ AZURE_VOICE_NAME = "sv-SE-MattiasNeural"
 # Hotkeys (keyboard library format: "ctrl+alt+s", "ctrl+shift+r", etc.)
 HOTKEY_READ_SELECTED = "ctrl+alt+s"
 HOTKEY_SCREENSHOT_OCR = "ctrl+alt+o"
+HOTKEY_OPEN_TEXT_INPUT = "ctrl+alt+v"
 
 # Language: "sv" for Swedish, "en" for English
 # Controls both OCR language and which voice list is shown in settings
