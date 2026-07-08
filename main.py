@@ -13,6 +13,8 @@ import queue
 import threading
 import tkinter as tk
 import time
+import webbrowser
+from tkinter import messagebox
 
 import pyperclip
 import keyboard as kb
@@ -33,6 +35,9 @@ from text_input_window import TextInputWindow
 word_queue: queue.Queue = queue.Queue()
 tts_engine: TTSEngine = None
 playback_window: PlaybackWindow = None
+playback_start_time: float = 0.0
+playback_token = None
+pending_word_events = []
 settings_window_ref: SettingsWindow = None
 text_input_window_ref: TextInputWindow = None
 abbreviations_window_ref = None
@@ -46,7 +51,7 @@ def _preprocess(text: str) -> str:
 def _on_read_text(text: str):
     """Internal helper to start TTS on a string with markdown support."""
     global tts_engine, playback_window
-    if not text or playback_window is not None:
+    if not text or tts_engine is not None or playback_window is not None:
         return
 
     text = _preprocess(text)
@@ -156,6 +161,13 @@ def on_open_abbreviations():
     abbreviations_window_ref = AbbreviationsWindow(root, _on_closed)
 
 
+def on_open_azure_costs():
+    """Open the configured Azure cost/budget page in the default browser."""
+    url = config_loader.load().AZURE_COST_URL.strip()
+    if url:
+        webbrowser.open(url)
+
+
 def on_settings_closed():
     global settings_window_ref
     settings_window_ref = None
@@ -165,9 +177,12 @@ def on_settings_closed():
 
 def on_cancel():
     """Called on main thread from Cancel button in playback window."""
-    global tts_engine, playback_window
+    global tts_engine, playback_window, playback_token, pending_word_events
     if tts_engine is not None:
         tts_engine.stop()
+        tts_engine = None
+    playback_token = None
+    pending_word_events.clear()
     if playback_window is not None:
         try:
             playback_window.close()
@@ -176,9 +191,33 @@ def on_cancel():
         playback_window = None
 
 
+def _highlight_word(offset: int, length: int):
+    global playback_window
+    if playback_window is None:
+        return
+    try:
+        playback_window.highlight_word(offset, length)
+    except tk.TclError:
+        playback_window = None
+
+
+def _flush_due_word_events():
+    if tts_engine is None or playback_window is None:
+        return
+
+    playback_ms = tts_engine.playback_position_ms()
+    due_events = []
+    while pending_word_events and pending_word_events[0]["audio_offset_ms"] <= playback_ms + 25:
+        due_events.append(pending_word_events.pop(0))
+
+    if due_events:
+        event = due_events[-1]
+        _highlight_word(event["offset"], event["length"])
+
+
 def poll_word_queue():
     """Drains the word_queue every 50 ms on the main thread."""
-    global playback_window
+    global tts_engine, playback_window, playback_start_time, playback_token, pending_word_events
 
     while True:
         try:
@@ -187,9 +226,16 @@ def poll_word_queue():
             break
 
         msg_type = msg.get("type")
+        msg_token = msg.get("token")
+        active_token = tts_engine.message_token if tts_engine is not None else None
+        if msg_token is not None and msg_token != active_token:
+            continue
 
         if msg_type == "start":
             if playback_window is None:
+                playback_start_time = time.monotonic()
+                playback_token = msg_token
+                pending_word_events.clear()
                 playback_window = PlaybackWindow(
                     root, 
                     msg["text"], 
@@ -199,12 +245,29 @@ def poll_word_queue():
 
         elif msg_type == "word":
             if playback_window is not None:
-                try:
-                    playback_window.highlight_word(msg["offset"], msg["length"])
-                except tk.TclError:
-                    playback_window = None
+                audio_offset_ms = msg.get("audio_offset_ms")
+                if audio_offset_ms is None:
+                    _highlight_word(msg["offset"], msg["length"])
+                else:
+                    pending_word_events.append(
+                        {
+                            "audio_offset_ms": audio_offset_ms,
+                            "offset": msg["offset"],
+                            "length": msg["length"],
+                        }
+                    )
+
+        elif msg_type == "error":
+            messagebox.showerror(
+                msg.get("title", "TTS-fel"),
+                msg.get("message", "Texten kunde inte läsas upp."),
+                parent=root,
+            )
 
         elif msg_type == "done":
+            tts_engine = None
+            playback_token = None
+            pending_word_events.clear()
             if playback_window is not None:
                 try:
                     playback_window.close()
@@ -212,7 +275,8 @@ def poll_word_queue():
                     pass
                 playback_window = None
 
-    root.after(50, poll_word_queue)
+    _flush_due_word_events()
+    root.after(20, poll_word_queue)
 
 
 def on_exit():
@@ -283,7 +347,7 @@ def main():
     splash_update("Startar systemfältsikon...")
     threading.Thread(
         target=tray.run,
-        args=(root, on_read_selected, on_screenshot_ocr, on_open_text_input, on_open_settings, on_open_abbreviations, on_exit),
+        args=(root, on_read_selected, on_screenshot_ocr, on_open_text_input, on_open_settings, on_open_abbreviations, on_open_azure_costs, on_exit),
         daemon=True,
     ).start()
 

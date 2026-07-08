@@ -14,3 +14,6 @@ LANGUAGE = "sv"
 # Milliseconds to wait after simulating Ctrl+C before reading clipboard
 # Increase if selected text is often empty (slow apps like browsers may need 200-300)
 CLIPBOARD_DELAY_MS = 150
+
+# Optional local link opened from the tray menu. Keep personal budget URLs in config.py only.
+AZURE_COST_URL = "https://portal.azure.com/#view/Microsoft_Azure_CostManagement/Menu/~/costanalysis"

@@ -37,6 +37,7 @@ class SettingsWindow:
     def __init__(self, root: tk.Tk, on_closed):
         self._root = root
         self._on_closed = on_closed
+        self._original_key = ""
 
         self.win = tk.Toplevel(root)
         self.win.title("Inställningar")
@@ -134,6 +135,16 @@ class SettingsWindow:
         )
         self._btn_listen_shot.grid(row=5, column=2, **pad)
 
+
+        # Azure cost/budget link
+        tk.Label(frame, text="Azure kostnadslänk:", anchor="w", width=lbl_w).grid(
+            row=6, column=0, sticky="w", **pad
+        )
+        self._cost_url_var = tk.StringVar()
+        tk.Entry(frame, textvariable=self._cost_url_var, width=34).grid(
+            row=6, column=1, columnspan=2, sticky="ew", **pad
+        )
+
         frame.columnconfigure(1, weight=1)
 
         # Button bar
@@ -151,7 +162,7 @@ class SettingsWindow:
         self.win.update_idletasks()
 
         w = max(600, self.win.winfo_reqwidth())
-        h = max(360, self.win.winfo_reqheight())
+        h = max(400, self.win.winfo_reqheight())
         sw = self._root.winfo_screenwidth()
         sh = self._root.winfo_screenheight()
         self.win.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
@@ -162,6 +173,7 @@ class SettingsWindow:
 
     def _load_from_config(self):
         cfg = config_loader.load()
+        self._original_key = cfg.AZURE_SPEECH_KEY
         self._key_var.set(cfg.AZURE_SPEECH_KEY)
         self._region_var.set(cfg.AZURE_SPEECH_REGION)
 
@@ -182,6 +194,7 @@ class SettingsWindow:
 
         self._hotkey_read_var.set(cfg.HOTKEY_READ_SELECTED)
         self._hotkey_shot_var.set(cfg.HOTKEY_SCREENSHOT_OCR)
+        self._cost_url_var.set(cfg.AZURE_COST_URL)
 
     def _populate_voices(self, lang: str):
         voices = VOICES.get(lang, VOICES["sv"])
@@ -230,6 +243,22 @@ class SettingsWindow:
             )
             return
 
+        if key == "your-key-here" or len(key) < 20:
+            messagebox.showwarning(
+                "Ogiltig API-nyckel",
+                "Azure API-nyckeln ser för kort ut. Kopiera KEY 1 eller KEY 2 från Speech-resursens Keys and Endpoint-sida.",
+                parent=self.win,
+            )
+            return
+
+        if self._original_key and key != self._original_key:
+            if not messagebox.askyesno(
+                "API-nyckeln har ändrats",
+                "Du har ändrat Azure API-nyckeln. Vill du verkligen spara den nya nyckeln?",
+                parent=self.win,
+            ):
+                return
+
         lang = self._lang_var.get()
         voices = VOICES.get(lang, VOICES["sv"])
         voice_idx = self._voice_combo.current()
@@ -237,6 +266,7 @@ class SettingsWindow:
 
         hotkey_read = self._hotkey_read_var.get().strip() or "ctrl+alt+s"
         hotkey_shot = self._hotkey_shot_var.get().strip() or "ctrl+alt+o"
+        cost_url = self._cost_url_var.get().strip()
 
         cfg = config_loader.load()
         content = (
@@ -254,6 +284,9 @@ class SettingsWindow:
             f'\n'
             f'# Milliseconds to wait after Ctrl+C before reading clipboard\n'
             f'CLIPBOARD_DELAY_MS = {cfg.CLIPBOARD_DELAY_MS}\n'
+            f'\n'
+            f'# Optional local link opened from the tray menu\n'
+            f'AZURE_COST_URL = {cost_url!r}\n'
         )
 
         try:

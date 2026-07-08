@@ -45,7 +45,7 @@ def _create_icon_image() -> Image.Image:
     return img
 
 
-def run(root, on_read_selected, on_screenshot_ocr, on_open_text_input, on_open_settings, on_open_abbreviations, on_exit):
+def run(root, on_read_selected, on_screenshot_ocr, on_open_text_input, on_open_settings, on_open_abbreviations, on_open_azure_costs, on_exit):
     """Blocking call — runs the pystray event loop. Call from a daemon thread."""
     global _icon
 
@@ -65,6 +65,10 @@ def run(root, on_read_selected, on_screenshot_ocr, on_open_text_input, on_open_s
         pystray.MenuItem(
             "Förkortningar…",
             lambda icon, item: root.after(0, on_open_abbreviations),
+        ),
+        pystray.MenuItem(
+            "Azure-kostnader...",
+            lambda icon, item: root.after(0, on_open_azure_costs),
         ),
         pystray.Menu.SEPARATOR,
         pystray.MenuItem(

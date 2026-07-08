@@ -48,6 +48,24 @@ Output: `dist/TTS Windows.exe`
 
 **Viktigt:** `config.py` måste ligga i samma mapp som exe-filen (inte inbakad). Kopiera `config.example.py` → `config.py` bredvid exe:n vid första distribution, eller låt användaren fylla i via Inställningar-GUI:t.
 
+## Installerad version hos Christian
+
+Den installerade kopian som Startmeny-genvägen pekar på ligger här:
+
+```text
+C:\Program_USB\TTS Windows\TTS Windows.exe
+```
+
+Aktiv installerad config ligger bredvid exe:n:
+
+```text
+C:\Program_USB\TTS Windows\config.py
+```
+
+Vid deploy: bygg först `dist/TTS Windows.exe`, ta backup på befintlig installerad exe med tidsstämpel, kopiera sedan nya exe:n till `C:\Program_USB\TTS Windows\TTS Windows.exe`.
+
+`config.py` är lokal driftdata och innehåller hemligheter. Deploy får inte kopiera över, regenerera eller skriva om installerad `config.py`. Ta en tidsstämplad backup på `C:\Program_USB\TTS Windows\config.py` innan någon configändring. Om användaren uttryckligen ber om configändring: gör bara riktade radändringar för de berörda icke-hemliga nycklarna, skriv aldrig ut API-nyckeln, och kopiera aldrig `dist/config.py`, repo-`config.py` eller `config.example.py` till installerade mappen.
+
 ## Språk
 
 Projektet och UI:t är på svenska. Kommunicera på svenska.
