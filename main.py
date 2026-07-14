@@ -5,7 +5,7 @@ Threading model:
   Main thread  : tkinter mainloop + all UI operations
   pystray thread (daemon): tray icon
   keyboard thread (daemon): global hotkeys
-  TTS thread (daemon, per utterance): Azure synthesis
+  TTS thread (daemon, per utterance): Piper or Azure synthesis
   OCR thread (daemon, per screenshot): winsdk OCR
 """
 
@@ -57,7 +57,7 @@ def _on_read_text(text: str) -> bool:
     text = _preprocess(text)
     cfg = config_loader.load()
     
-    # Parse markdown to get display text, SSML for audio, and formatting tags
+    # Parse markdown to get display text, optional SSML, and formatting tags
     display_text, ssml_text, tags = markdown_utils.process_markdown(text, cfg.AZURE_VOICE_NAME)
     
     tts_engine = TTSEngine(word_queue)
