@@ -1,6 +1,6 @@
 # TTS Windows
 
-En Windows-app som läser upp text med Azure Speech SDK. Kör i bakgrunden som en systemtray-ikon och aktiveras via snabbtangenter eller högerklicksmenyn.
+En Windows-app som läser upp text lokalt med Piper som standard, eller med Azure Speech SDK när premiumkvalitet väljs. Kör i bakgrunden som en systemtray-ikon och aktiveras via snabbtangenter eller högerklicksmenyn.
 
 
 
@@ -23,12 +23,12 @@ En Windows-app som läser upp text med Azure Speech SDK. Kör i bakgrunden som e
 
 Hämta senaste **TTS Windows.exe** från [Releases](https://github.com/wurf777/tts-windows/releases).
 
-Lägg `config.py` bredvid exe-filen (kopiera från `config.example.py`) och fyll i din Azure-nyckel — eller använd inställningsfönstret i appen.
+Lägg `config.py` bredvid exe-filen (kopiera från `config.example.py`). Piper är standard och kräver ingen API-nyckel. Azure-nyckeln behövs bara om Azure väljs som TTS-motor.
 
 ## Krav
 
 - Windows 10/11
-- Azure Speech Service-nyckel
+- Piper-modell för lokal uppläsning (följer med i byggda distributioner)
 - Administratörsrättigheter (krävs för globala snabbtangenter)
 
 *För att köra från källkod krävs även Python 3.10+ — se Installation nedan.*
@@ -53,12 +53,28 @@ cp config.example.py config.py
 copy config.example.py config.py
 ```
 
-Redigera `config.py`:
+Redigera `config.py` vid behov:
 
 ```python
+TTS_PROVIDER = "piper"  # eller "azure"
+PIPER_MODEL_PATH = "models/sv_SE-nst-medium.onnx"
 AZURE_SPEECH_KEY = "din-nyckel-här"
 AZURE_SPEECH_REGION = "swedencentral"
 AZURE_VOICE_NAME = "sv-SE-MattiasNeural"
+```
+
+Ladda ned den svenska Piper-modellen med:
+
+```bash
+.venv\Scripts\python.exe -m piper.download_voices sv_SE-nst-medium --download-dir models
+```
+
+Inställningsfönstrets språk- och röstlistor byggs från de Piper-modeller som
+finns lokalt i `models/`. Engelska stöds av Piper, men kräver att en engelsk
+modell först laddas ned, till exempel:
+
+```bash
+.venv\Scripts\python.exe -m piper.download_voices en_US-lessac-medium --download-dir models
 ```
 
 ## Användning
@@ -87,6 +103,8 @@ Alla inställningar finns i `config.py` (checkas inte in i git):
 
 | Inställning | Beskrivning | Standardvärde |
 |---|---|---|
+| `TTS_PROVIDER` | TTS-motor: `piper` eller `azure` | `piper` |
+| `PIPER_MODEL_PATH` | Sökväg till Piper-modellen | `models/sv_SE-nst-medium.onnx` |
 | `AZURE_SPEECH_KEY` | Azure-nyckel | — |
 | `AZURE_SPEECH_REGION` | Azure-region | `swedencentral` |
 | `AZURE_VOICE_NAME` | Röst (Neural TTS) | `sv-SE-MattiasNeural` |
@@ -102,7 +120,7 @@ Alla inställningar finns i `config.py` (checkas inte in i git):
 main.py              — entrypoint, tkinter mainloop, event-koordinator
 tray.py              — systemtray-ikon (pystray, daemon-tråd)
 hotkeys.py           — globala snabbtangenter (keyboard, daemon-tråd)
-tts_engine.py        — Azure Speech TTS, word boundary-events
+tts_engine.py        — Piper/Azure TTS och ordmarkeringshändelser
 playback_window.py   — uppspelningsfönster med ord-highlighting
 screenshot.py        — skärmdumpsöverlägg + Windows OCR (winrt)
 settings_window.py   — inställningsfönster för röst, tangenter och språk
@@ -117,7 +135,7 @@ config.example.py    — mall för config.py
 - **Main thread** — tkinter mainloop + all UI
 - **pystray-tråd** — tray-ikon (daemon)
 - **keyboard-tråd** — globala snabbtangenter (daemon)
-- **TTS-tråd** — Azure-syntes per uppläsning (daemon)
+- **TTS-tråd** — Piper-syntes lokalt eller Azure-syntes per uppläsning (daemon)
 - **OCR-tråd** — Windows OCR per screenshot (daemon)
 
 TTS- och OCR-trådar kommunicerar med main thread via en `queue.Queue` som pollas var 50 ms.
@@ -126,7 +144,8 @@ TTS- och OCR-trådar kommunicerar med main thread via en `queue.Queue` som polla
 
 | Paket | Syfte |
 |---|---|
-| `azure-cognitiveservices-speech` | Neural TTS + word boundary-events |
+| `azure-cognitiveservices-speech` | Azure Neural TTS + exakta word boundary-events |
+| `piper-tts` | Lokal svensk neural TTS utan API-kostnad |
 | `pystray` | Systemtray-ikon |
 | `keyboard` | Globala snabbtangenter |
 | `Pillow` | Bildhantering för screenshot |

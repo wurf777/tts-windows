@@ -1,4 +1,11 @@
-# Azure Speech Service
+# TTS-motor: "piper" (lokal, standard) eller "azure" (premium)
+TTS_PROVIDER = "piper"
+
+# Piper-modell, relativt till appens mapp. Ladda ned sv_SE-nst-medium
+# och lägg både .onnx- och .onnx.json-filen i denna mapp.
+PIPER_MODEL_PATH = "models/sv_SE-nst-medium.onnx"
+
+# Azure Speech Service (behövs bara när TTS_PROVIDER = "azure")
 AZURE_SPEECH_KEY = "your-key-here"
 AZURE_SPEECH_REGION = "swedencentral"
 AZURE_VOICE_NAME = "sv-SE-MattiasNeural"

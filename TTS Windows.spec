@@ -1,5 +1,6 @@
 # -*- mode: python ; coding: utf-8 -*-
 from PyInstaller.utils.hooks import collect_all
+import os
 
 datas = []
 binaries = []
@@ -8,6 +9,13 @@ tmp_ret = collect_all('azure.cognitiveservices.speech')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 tmp_ret = collect_all('winsdk')
 datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+tmp_ret = collect_all('piper')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+
+# The voice model is local data, not Python code. Include it when the model
+# directory exists; a source checkout can still build without downloading it.
+if os.path.isdir('models'):
+    datas.append((os.path.abspath('models'), 'models'))
 
 
 a = Analysis(
