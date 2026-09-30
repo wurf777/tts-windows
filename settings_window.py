@@ -31,6 +31,7 @@ VOICES: dict[str, list[tuple[str, str]]] = {
 }
 
 LANGUAGE_LABELS = {"sv": "Svenska", "en": "Engelska"}
+ADDRESS_MODES = {"short": "Kort ersättning", "skip": "Hoppa över helt", "read": "Läs hela adressen"}
 
 
 class SettingsWindow:
@@ -159,6 +160,15 @@ class SettingsWindow:
             row=7, column=1, columnspan=2, sticky="ew", **pad
         )
 
+        tk.Label(frame, text="Webb- och e-postadresser:", anchor="w", width=lbl_w).grid(
+            row=8, column=0, sticky="w", **pad
+        )
+        self._address_mode_var = tk.StringVar()
+        ttk.Combobox(frame, textvariable=self._address_mode_var, state="readonly",
+                     values=list(ADDRESS_MODES.values()), width=36).grid(
+            row=8, column=1, columnspan=2, sticky="ew", **pad
+        )
+
         frame.columnconfigure(1, weight=1)
 
         # Button bar
@@ -210,6 +220,7 @@ class SettingsWindow:
         self._hotkey_shot_var.set(cfg.HOTKEY_SCREENSHOT_OCR)
         self._hotkey_text_input_var.set(cfg.HOTKEY_OPEN_TEXT_INPUT)
         self._cost_url_var.set(cfg.AZURE_COST_URL)
+        self._address_mode_var.set(ADDRESS_MODES.get(cfg.ADDRESS_READING_MODE, ADDRESS_MODES["short"]))
 
     def _populate_voices(self, lang: str):
         voices = VOICES.get(lang, VOICES["sv"])
@@ -283,6 +294,8 @@ class SettingsWindow:
         hotkey_shot = self._hotkey_shot_var.get().strip() or "ctrl+alt+o"
         hotkey_text_input = self._hotkey_text_input_var.get().strip() or "ctrl+alt+v"
         cost_url = self._cost_url_var.get().strip()
+        address_mode = next((mode for mode, label in ADDRESS_MODES.items()
+                             if label == self._address_mode_var.get()), "short")
 
         cfg = config_loader.load()
         content = (
@@ -298,6 +311,7 @@ class SettingsWindow:
             f'\n'
             f'# Language: "sv" for Swedish, "en" for English\n'
             f'LANGUAGE = {lang!r}\n'
+            f'ADDRESS_READING_MODE = {address_mode!r}\n'
             f'\n'
             f'# Milliseconds to wait after Ctrl+C before reading clipboard\n'
             f'CLIPBOARD_DELAY_MS = {cfg.CLIPBOARD_DELAY_MS}\n'

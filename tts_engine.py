@@ -50,7 +50,7 @@ class TTSEngine:
     # Public API
     # ------------------------------------------------------------------
 
-    def speak(self, display_text: str, ssml_text: str, tags: Optional[list] = None) -> None:
+    def speak(self, display_text: str, ssml_text: str, tags: Optional[list] = None, speech_map=None) -> None:
         """Synthesise text and emit word-boundary messages. Blocks until done."""
         self._stop_requested.clear()
         cfg = config_loader.load()
@@ -102,6 +102,17 @@ class TTSEngine:
             # (including tags). Search the display text instead.
             word = evt.text
             if not word:
+                return
+
+            if speech_map is not None:
+                position = speech_map.find_word(word)
+                if position is not None:
+                    offset, length = position
+                    self._word_queue.put({
+                        "type": "word", "token": self.message_token,
+                        "offset": offset, "length": length,
+                        "audio_offset_ms": evt.audio_offset / 10000,
+                    })
                 return
 
             # Handles duplicate words correctly by progressing through the text.

@@ -12,6 +12,9 @@ HOTKEY_OPEN_TEXT_INPUT = "ctrl+alt+v"
 # Controls both OCR language and which voice list is shown in settings
 LANGUAGE = "sv"
 
+# Web/email addresses: "short" (replacement), "skip", or "read"
+ADDRESS_READING_MODE = "short"
+
 # Milliseconds to wait after simulating Ctrl+C before reading clipboard
 # Increase if selected text is often empty (slow apps like browsers may need 200-300)
 CLIPBOARD_DELAY_MS = 150

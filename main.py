@@ -24,6 +24,7 @@ import tray
 import hotkeys
 import abbreviations
 import markdown_utils
+from address_utils import transform_plain
 from tts_engine import TTSEngine
 from playback_window import PlaybackWindow
 from screenshot import ScreenshotOverlay, configure_dpi_awareness
@@ -45,7 +46,7 @@ root: tk.Tk = None
 
 
 def _preprocess(text: str) -> str:
-    return abbreviations.expand(text)
+    return transform_plain(text, abbreviations.expand)
 
 
 def _on_read_text(text: str) -> bool:
@@ -58,12 +59,14 @@ def _on_read_text(text: str) -> bool:
     cfg = config_loader.load()
     
     # Parse markdown to get display text, SSML for audio, and formatting tags
-    display_text, ssml_text, tags = markdown_utils.process_markdown(text, cfg.AZURE_VOICE_NAME)
+    display_text, ssml_text, tags, speech_map = markdown_utils.process_markdown(
+        text, cfg.AZURE_VOICE_NAME, cfg.ADDRESS_READING_MODE, include_mapping=True
+    )
     
     tts_engine = TTSEngine(word_queue)
     threading.Thread(
         target=tts_engine.speak, 
-        args=(display_text, ssml_text, tags), 
+        args=(display_text, ssml_text, tags, speech_map),
         daemon=True
     ).start()
     return True
