@@ -8,6 +8,8 @@ from tkinter import font as tkfont, ttk
 
 
 AUTO_CLOSE_SECONDS = 5
+FOCUS_RETRY_MS = 80
+FOCUS_ATTEMPTS = 5
 
 
 class TextInputWindow:
@@ -20,6 +22,7 @@ class TextInputWindow:
         self._closed = False
         self._auto_close_after_id = None
         self._auto_close_remaining = 0
+        self._focus_after_id = None
 
         self.win = tk.Toplevel(root)
         self.win.title("Klistra in text")
@@ -36,11 +39,46 @@ class TextInputWindow:
         self.win.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
 
         self._build_ui()
-        self.win.after(100, self._focus)
+        self.show()
 
-    def _focus(self):
-        self.win.focus_force()
-        self._text_widget.focus_set()
+    def show(self):
+        """Restore the window and focus its editor for every open request."""
+        if self._closed:
+            return False
+        self._cancel_focus_request()
+        self.win.deiconify()
+        self.win.lift()
+        self._focus_after_id = self.win.after_idle(self._focus)
+        return True
+
+    def _focus(self, attempt=0):
+        self._focus_after_id = None
+        if self._closed:
+            return
+        try:
+            current = self.win.focus_get()
+            if attempt > 0 and current is not None:
+                # Success, or the user has deliberately moved to another widget.
+                return
+            if self.win.state() in ("withdrawn", "iconic"):
+                return
+            if self.win.winfo_viewable():
+                self._text_widget.focus_force()
+            if attempt + 1 < FOCUS_ATTEMPTS:
+                self._focus_after_id = self.win.after(
+                    FOCUS_RETRY_MS, lambda: self._focus(attempt + 1)
+                )
+        except tk.TclError:
+            # The window may have been destroyed while a request was pending.
+            return
+
+    def _cancel_focus_request(self):
+        if self._focus_after_id is not None:
+            try:
+                self.win.after_cancel(self._focus_after_id)
+            except tk.TclError:
+                pass
+            self._focus_after_id = None
 
     def _build_ui(self):
         # Label
@@ -186,6 +224,7 @@ class TextInputWindow:
         if self._closed:
             return
         self._closed = True
+        self._cancel_focus_request()
         self._cancel_auto_close(reset_button=False)
         try:
             self.win.destroy()

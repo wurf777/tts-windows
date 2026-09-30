@@ -122,9 +122,8 @@ def on_open_text_input():
     global text_input_window_ref
     if text_input_window_ref is not None:
         try:
-            text_input_window_ref.win.lift()
-            text_input_window_ref.win.focus_force()
-            return
+            if text_input_window_ref.show():
+                return
         except tk.TclError:
             text_input_window_ref = None
 
