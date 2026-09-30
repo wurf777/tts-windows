@@ -26,7 +26,12 @@ def process_markdown(text: str, voice_name: str, address_mode="short", include_m
                 speech_map.append(spoken, offset + start)
             else:
                 english = lang.startswith("en")
-                spoken = ("email address available" if english else "e-postadress finns") if kind == "email" else ("link available" if english else "länk finns")
+                replacements = {
+                    "email": ("e-postadress finns", "email address available"),
+                    "url": ("länk finns", "link available"),
+                    "path": ("sökväg finns", "path available"),
+                }
+                spoken = replacements[kind][int(english)]
                 if address_mode == "skip":
                     spoken = " "
                 speech_map.append(spoken, offset + start, offset + end)
@@ -61,7 +66,7 @@ def process_markdown(text: str, voice_name: str, address_mode="short", include_m
         
         address_spans = list(addresses(line))
         for match in pattern.finditer(line):
-            # Underscores within URLs/email addresses are literal characters.
+            # Underscores within addresses and paths are literal characters.
             if any(start <= match.start() < end for start, end, _ in address_spans):
                 continue
             # Text before the match

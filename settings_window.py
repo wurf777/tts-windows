@@ -31,7 +31,7 @@ VOICES: dict[str, list[tuple[str, str]]] = {
 }
 
 LANGUAGE_LABELS = {"sv": "Svenska", "en": "Engelska"}
-ADDRESS_MODES = {"short": "Kort ersättning", "skip": "Hoppa över helt", "read": "Läs hela adressen"}
+ADDRESS_MODES = {"short": "Kort ersättning", "skip": "Hoppa över helt", "read": "Läs i sin helhet"}
 
 
 class SettingsWindow:
@@ -160,7 +160,7 @@ class SettingsWindow:
             row=7, column=1, columnspan=2, sticky="ew", **pad
         )
 
-        tk.Label(frame, text="Webb- och e-postadresser:", anchor="w", width=lbl_w).grid(
+        tk.Label(frame, text="Adresser och sökvägar:", anchor="w", width=lbl_w).grid(
             row=8, column=0, sticky="w", **pad
         )
         self._address_mode_var = tk.StringVar()

@@ -14,6 +14,7 @@ En Windows-app som läser upp text med Azure Speech SDK. Kör i bakgrunden som e
 - **Markdown-stöd** — fetstil, kursiv, listor och citat renderas i uppspelningsfönstret
 - **Förkortningsexpansion** — anpassningsbara förkortningar expanderas automatiskt vid uppläsning
 - **Korta adresser** — webbadresser läses som ”länk finns” och e-postadresser som ”e-postadress finns”. Adressen står kvar och markeras i texten. I Inställningar kan du även välja att hoppa över adresser eller läsa dem i sin helhet.
+- **Korta sökvägar** — fil- och nätverkssökvägar läses som ”sökväg finns” och står kvar i texten. Samma inställning gäller som för adresser. Sökvägar med blanksteg stöds i Windows-mappar och filnamn med filändelse; använd citattecken runt hela sökvägen när slutet annars är tvetydigt, exempelvis `"C:\Min mapp\En annan mapp"`.
 - **Inställningsfönster** — byt röst, snabbtangenter och språk direkt i appen
 
 | Uppspelningsfönster | Markdown-stöd | Inställningar |
@@ -95,7 +96,7 @@ Alla inställningar finns i `config.py` (checkas inte in i git):
 | `HOTKEY_SCREENSHOT_OCR` | Snabbtangent för OCR | `ctrl+alt+o` |
 | `HOTKEY_OPEN_TEXT_INPUT` | Snabbtangent för textinmatningsfönster | `ctrl+alt+v` |
 | `LANGUAGE` | Språk för OCR | `sv` |
-| `ADDRESS_READING_MODE` | Adresser: `short` (kort ersättning), `skip` eller `read` | `short` |
+| `ADDRESS_READING_MODE` | Adresser och sökvägar: `short` (kort ersättning), `skip` eller `read` | `short` |
 | `CLIPBOARD_DELAY_MS` | Fördröjning efter Ctrl+C | `150` |
 
 ## Arkitektur
