@@ -1,6 +1,6 @@
 # TTS Windows
 
-Windows text-to-speech app som körs som system tray-ikon. Använder Azure Neural TTS för att läsa text högt med realtids-ordmarkering.
+Windows text-to-speech app som körs som system tray-ikon. Använder Piper lokalt som standard och Azure Neural TTS som valbart premiumalternativ.
 
 ## Funktioner
 
@@ -13,7 +13,7 @@ Windows text-to-speech app som körs som system tray-ikon. Använder Azure Neura
 ## Arkitektur
 
 - `main.py` - Entrypoint, dold tkinter root, message pump, queue-polling (50ms)
-- `tts_engine.py` - Azure TTS worker, thread-safe, word boundary events via queue
+- `tts_engine.py` - Piper/Azure TTS worker, thread-safe, word events via queue
 - `playback_window.py` - Tkinter Toplevel, text med guldmarkering för aktuellt ord
 - `screenshot.py` - Fullskärms-overlay + Pillow screengrab + winsdk OCR (async)
 - `config_loader.py` - Löser rätt config.py-sökväg (exe-mapp vs skript-mapp), laddar med exec()

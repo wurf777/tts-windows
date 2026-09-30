@@ -20,6 +20,8 @@ APP_DIR = _app_dir()
 CONFIG_PATH = os.path.join(APP_DIR, "config.py")
 
 _DEFAULTS = {
+    "TTS_PROVIDER": "piper",
+    "PIPER_MODEL_PATH": "models/sv_SE-nst-medium.onnx",
     "AZURE_SPEECH_KEY": "",
     "AZURE_SPEECH_REGION": "swedencentral",
     "AZURE_VOICE_NAME": "sv-SE-MattiasNeural",

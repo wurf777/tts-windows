@@ -9,3 +9,5 @@ dist/
 build/
 error.log
 .claude/
+models/
+/test-run/
